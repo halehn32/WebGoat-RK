@@ -1,11 +1,12 @@
 name: Fortify ScanCentral SAST Scan
 on:
   workflow_dispatch:
+  # Master or main branch that you want to trigger this workflow for
   push:
-    branches: 'main'
+    branches: [main]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: 'main'
+    branches: [main]
 
 jobs:                                                  
   Fortify-SAST:
@@ -25,7 +26,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v1
         with:
-          java-version: 1.11
+          java-version: 11
 
       ### Set up Fortify ScanCentral Client ###
       - name: Download Fortify ScanCentral Client
@@ -39,9 +40,9 @@ jobs:
       #   ScanCentral Client will download dependencies for maven, gradle and msbuild projects.
       #   For other build tools, add your build commands to the workflow to download necessary dependencies and prepare according to Fortify SCA documentation.
       - name: Perform SAST Scan
-        run: scancentral -ssctoken $TOKEN -sscurl ${URL} start $BUILD_OPTS -upload -application $APPLICATION -version $VERSION -uptoken $TOKEN
+        run: scancentral -url ${URL} start $BUILD_OPTS -upload -application $APPLICATION -version $VERSION -uptoken $TOKEN
         env:                                            
-          URL: ${{ secrets.SSC_URL }}
+          URL: ${{ secrets.SCC_URL }}
           TOKEN: ${{ secrets.SSC_UPLOAD_TOKEN }}
           APPLICATION: "WebGoat"
           VERSION: "8.1"
@@ -53,4 +54,4 @@ jobs:
         if: failure()
         with:
            name: scancentral-logs
-           path: /home/runner/.fortify/scancentral/log
+           path: ~/.fortify/scancentral/log
