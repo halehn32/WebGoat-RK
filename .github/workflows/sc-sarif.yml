@@ -1,0 +1,36 @@
+name: Fortify ScanCentral SAST Scan (SARIF File)
+on:
+  workflow_dispatch:
+  # Master or main branch that you want to trigger this workflow for
+  push:
+    branches: [main]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [main]
+
+jobs:                                                  
+  Import-SSC-SAST:
+    runs-on: ubuntu-latest
+    needs: [Fortify-SAST]
+    steps:
+      # Wait for SAST scan to complete
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
+      # Pull SAST issues from Fortify SSC and generate GitHub-optimized SARIF output
+      - name: Export Results
+        uses: fortify/gha-export-vulnerabilities@v1
+        with:
+          ssc_base_url: ${{ secrets.SSC_URL }}
+          ssc_auth_token: ${{ secrets.SSC_CI_TOKEN }}
+          ssc_version_id: ${{ secrets.SSC_VERSION_ID }}
+      
+      # Import Fortify SAST results to GitHub Security Code Scanning
+      - name: Upload Results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: sarif-files
+          path: '**/*.sarif'
